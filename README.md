@@ -7,6 +7,6 @@
 I'm currently working on this project, you can test it and contribute if you want !
 
 <br />
-## How to build
+##How to build
 
--Use CMake with your IDE as normal.
+- Use CMake with your IDE as normal.
