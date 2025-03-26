@@ -1,7 +1,7 @@
-# GLCraft
+# Gravity Simulator
 
-**`An OpenGL rendering engine`**
+**`An OpenGL gravity simulator engine based on Einstein's Theory of relativity`**
 <br />
 <br />
 
-I'm currently working on this project so you can't realy test it yet :/
+I'm currently working on this project, you can test it and contribute if you want !
