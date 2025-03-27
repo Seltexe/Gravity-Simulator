@@ -3,8 +3,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <../imgui/imgui.h>
 #include <vector>
 #include <iostream>
+#include "Camera.hpp"
 
 const char* vertexShaderSource = R"glsl(
 #version 330 core
@@ -44,7 +46,7 @@ bool pause = true;
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 1.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-float lastX = 400.0, lastY = 300.0;
+float lastX = 800.0, lastY = 400.0;
 float yaw = -90;
 float pitch = 0.0;
 float deltaTime = 0.0;
@@ -199,12 +201,15 @@ int main() {
        //Object(glm::vec3(3844, 0, 0), glm::vec3(0, 0, 228), 7.34767309*pow(10, 22), 3344),
        //Object(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), 1.989 * pow(10, 30), 5515, glm::vec4(1.0f, 0.929f, 0.176f, 1.0f)),
        //Object(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), 5.97219*pow(10, 24), 5515, glm::vec4(0.0f, 1.0f, 1.0f, 1.0f)),
-       Object(glm::vec3(-5000, 650, -350), glm::vec3(0, 0, 500), 5.97219 * pow(10, 22), 5515, glm::vec4(0.0f, 1.0f, 1.0f, 1.0f)),
-       Object(glm::vec3(5000, 650, -350), glm::vec3(0, 0, -500), 5.97219 * pow(10, 22), 5515, glm::vec4(0.0f, 1.0f, 1.0f, 1.0f)),
-       Object(glm::vec3(0, 0, -350), glm::vec3(0, 0, 50), 1.989 * pow(10, 25), 5515, glm::vec4(1.0f, 0.929f, 0.176f, 1.0f), true),
+
+       Object(glm::vec3(-15000, 650, -350), glm::vec3(0, 0, 1500), 5.97219 * pow(10, 24), 5515, glm::vec4(0.0f, 1.0f, 1.0f, 1.0f)),
+       Object(glm::vec3(15000, 650, -350), glm::vec3(0, 0, -1500), 5.97219 * pow(10, 24), 5515, glm::vec4(0.0f, 1.0f, 1.0f, 1.0f)),
+       Object(glm::vec3(0, 0, -350), glm::vec3(0, 0, 50), 1.989 * pow(10, 27), 5515, glm::vec4(1.0f, 0.929f, 0.176f, 1.0f), true),
+       // Sun
+	   //Object(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), 1.989 * pow(10, 26), 1410, glm::vec4(1.0f, 0.929f, 0.176f, 1.0f)),
 
     };
-    std::vector<float> gridVertices = CreateGridVertices(40000.0f, 25, objs);
+    std::vector<float> gridVertices = CreateGridVertices(400000.0f, 100, objs);
     CreateVBOVAO(gridVAO, gridVBO, gridVertices.data(), gridVertices.size());
 
     while (!glfwWindowShouldClose(window) && running == true) {
@@ -450,7 +455,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
     }
 
     // init arrows pos up down left right
-    if (!objs.empty() && objs[objs.size() - 1].Initalizing) {
+    /*if (!objs.empty() && objs[objs.size() - 1].Initalizing) {
         if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
             if (!shiftPressed) {
                 objs[objs.size() - 1].position[1] += objs[objs.size() - 1].radius * 0.2;
@@ -474,7 +479,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
         if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
             objs[objs.size() - 1].position[2] -= objs[objs.size() - 1].radius * 0.2;
         }
-    };
+    };*/
 
 };
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
@@ -618,6 +623,10 @@ std::vector<float> UpdateGridVertices(std::vector<float> vertices, const std::ve
             float dz = 2 * sqrt(rs * (distance_m - rs));
             totalDisplacement.y += dz * 2.0f;
         }
+        // Limiter le déplacement vertical pour éviter l'explosion de la grille
+        float maxDisplacement = 10000000.0f; // Ajustez cette valeur selon vos besoins
+        totalDisplacement.y = std::min(totalDisplacement.y, maxDisplacement);
+
         vertices[i + 1] = totalDisplacement.y + -abs(verticalShift);
     }
 
