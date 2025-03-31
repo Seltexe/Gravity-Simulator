@@ -4,6 +4,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <../imgui/imgui.h>
+#include "../imgui/backends/imgui_impl_glfw.h"
+#include "../imgui/backends/imgui_impl_opengl3.h"
+#include "../imgui/imguiThemes.h"
 #include <vector>
 #include <iostream>
 #include "Camera.hpp"
@@ -190,6 +193,14 @@ int main() {
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+    // Initialiser ImGui
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 330");
+
     //projection matrix
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1600.0f / 800.0f, 0.1f, 750000.0f);
     GLint projectionLoc = glGetUniformLocation(shaderProgram, "projection");
@@ -303,9 +314,30 @@ int main() {
             glDrawArrays(GL_TRIANGLES, 0, obj.vertexCount / 3);
         }
 
+        // Démarrer une nouvelle frame ImGui
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        // Créer une fenêtre ImGui
+        ImGui::Begin("Contrôles");
+        ImGui::Text("Utilisez les contrôles ci-dessous pour interagir avec la simulation.");
+        ImGui::Checkbox("Pause", &pause);
+        ImGui::End();
+
+        // Rendre ImGui
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+    // Nettoyer ImGui
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
     for (auto& obj : objs) {
         glDeleteVertexArrays(1, &obj.VAO);
