@@ -46,10 +46,15 @@ void main() {
 
 bool running = true;
 bool pause = true;
+bool mouseCaptured = true;
+
+const float windowSizeX = 1600.0f;
+const float windowSizeY = 900.0f;
+
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 1.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-float lastX = 800.0, lastY = 400.0;
+float lastX = 800.0, lastY = 450.0;
 float yaw = -90;
 float pitch = 0.0;
 float deltaTime = 0.0;
@@ -76,7 +81,7 @@ void DrawGrid(GLuint shaderProgram, GLuint gridVAO, size_t vertexCount);
 class Object {
 public:
     GLuint VAO, VBO;
-    glm::vec3 position = glm::vec3(400, 300, 0);
+    glm::vec3 position = glm::vec3(800, 450, 0);
     glm::vec3 velocity = glm::vec3(0, 0, 0);
     size_t vertexCount;
     glm::vec4 color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
@@ -202,7 +207,7 @@ int main() {
     ImGui_ImplOpenGL3_Init("#version 330");
 
     //projection matrix
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1600.0f / 800.0f, 0.1f, 750000.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), windowSizeX / windowSizeY, 0.1f, 750000.0f);
     GLint projectionLoc = glGetUniformLocation(shaderProgram, "projection");
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
     cameraPos = glm::vec3(0.0f, 1000.0f, 5000.0f);
@@ -375,7 +380,7 @@ GLFWwindow* StartGLU() {
     }
 
     glEnable(GL_DEPTH_TEST);
-    glViewport(0, 0, 1600, 800);
+    glViewport(0, 0, windowSizeX, windowSizeY);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -451,7 +456,6 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
     bool shiftPressed = (mods & GLFW_MOD_SHIFT) != 0;
     Object& lastObj = objs[objs.size() - 1];
 
-
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         cameraPos += cameraSpeed * cameraFront;
     }
@@ -486,35 +490,20 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
         running = false;
     }
 
-    // init arrows pos up down left right
-    /*if (!objs.empty() && objs[objs.size() - 1].Initalizing) {
-        if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-            if (!shiftPressed) {
-                objs[objs.size() - 1].position[1] += objs[objs.size() - 1].radius * 0.2;
-            }
-        };
-        if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-            if (!shiftPressed) {
-                objs[objs.size() - 1].position[1] -= objs[objs.size() - 1].radius * 0.2;
-            }
+    // Bascule l'état de la souris lorsque la touche M est pressée
+    if (key == GLFW_KEY_M && action == GLFW_PRESS) {
+        mouseCaptured = !mouseCaptured;
+        if (mouseCaptured) {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         }
-        if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-            objs[objs.size() - 1].position[0] += objs[objs.size() - 1].radius * 0.2;
-        };
-        if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-            objs[objs.size() - 1].position[0] -= objs[objs.size() - 1].radius * 0.2;
-        };
-        if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-            objs[objs.size() - 1].position[2] += objs[objs.size() - 1].radius * 0.2;
-        };
-
-        if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-            objs[objs.size() - 1].position[2] -= objs[objs.size() - 1].radius * 0.2;
+        else {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
-    };*/
+    }
+}
 
-};
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+    if (!mouseCaptured) return;
 
     float xoffset = xpos - lastX;
     float yoffset = lastY - ypos;
@@ -537,23 +526,24 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
     cameraFront = glm::normalize(front);
 }
+
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
-    if (button == GLFW_MOUSE_BUTTON_LEFT) {
-        if (action == GLFW_PRESS) {
-            objs.emplace_back(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0f, 0.0f, 0.0f), initMass);
-            objs[objs.size() - 1].Initalizing = true;
-        };
-        if (action == GLFW_RELEASE) {
-            objs[objs.size() - 1].Initalizing = false;
-            objs[objs.size() - 1].Launched = true;
-        };
-    };
-    if (!objs.empty() && button == GLFW_MOUSE_BUTTON_RIGHT && objs[objs.size() - 1].Initalizing) {
-        if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-            objs[objs.size() - 1].mass *= 1.2;
-        }
-        //std::cout << "MASS: " << objs[objs.size() - 1].mass << std::endl;
-    }
+    //if (button == GLFW_MOUSE_BUTTON_LEFT) {
+    //    if (action == GLFW_PRESS) {
+    //        objs.emplace_back(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0f, 0.0f, 0.0f), initMass);
+    //        objs[objs.size() - 1].Initalizing = true;
+    //    };
+    //    if (action == GLFW_RELEASE) {
+    //        objs[objs.size() - 1].Initalizing = false;
+    //        objs[objs.size() - 1].Launched = true;
+    //    };
+    //};
+    //if (!objs.empty() && button == GLFW_MOUSE_BUTTON_RIGHT && objs[objs.size() - 1].Initalizing) {
+    //    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+    //        objs[objs.size() - 1].mass *= 1.2;
+    //    }
+    //    //std::cout << "MASS: " << objs[objs.size() - 1].mass << std::endl;
+    //}
 };
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     float cameraSpeed = 250000.0f * deltaTime;
@@ -636,6 +626,15 @@ std::vector<float> UpdateGridVertices(std::vector<float> vertices, const std::ve
     }
 
     float verticalShift = comY - originalMaxY;
+
+	/*ImGui::Begin("Grid Info");
+	ImGui::Text("Vertical shift: %f", verticalShift);
+	ImGui::Text("Center of mass: %f", comY);
+	ImGui::Text("Original mass: %f", originalMaxY);
+	ImGui::Text("Total mass: %f", totalMass);
+	ImGui::End();*/
+
+
     //std::cout << "vertical shift: " << verticalShift << " |         comY: " << comY << "|            originalmaxy: " << originalMaxY << std::endl;
 
 
